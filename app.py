@@ -1,3 +1,4 @@
+import os
 import streamlit as st
 import base64
 from openai import OpenAI
@@ -16,12 +17,19 @@ st.set_page_config(
 
 st.title("Análisis de Imágenes")
 
-# Obtener API key desde secrets
-try:
-    client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
-except Exception as e:
-    st.error("No se encontró la API key. Configúrala en secrets.")
-    st.stop()
+# Input de API Key (oculta)
+ke = st.text_input("Ingresa tu Clave", type="password")
+
+# Validar API key
+api_key = ke.strip() if ke else None
+
+# Crear cliente solo si hay API key
+client = None
+if api_key:
+    try:
+        client = OpenAI(api_key=api_key)
+    except Exception as e:
+        st.error(f"Error al inicializar OpenAI: {e}")
 
 # Subir imagen
 uploaded_file = st.file_uploader("Sube una imagen", type=["jpg", "png", "jpeg"])
@@ -43,7 +51,10 @@ analyze_button = st.button("Analizar imagen")
 # Lógica principal
 if analyze_button:
 
-    if not uploaded_file:
+    if not api_key:
+        st.warning("Por favor ingresa tu API key.")
+    
+    elif not uploaded_file:
         st.warning("Por favor sube una imagen.")
     
     else:
